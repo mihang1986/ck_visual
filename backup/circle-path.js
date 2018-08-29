@@ -1,7 +1,7 @@
 const Path = require('./path');
 
 /***
- * deprecated use arc-path
+ * deprecated use arc-path1
  */
 module.exports = (function () {
     return Path.create({
