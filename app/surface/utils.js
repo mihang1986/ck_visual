@@ -186,6 +186,69 @@ module.exports = (function () {
             return val;
     };
 
+    var _privateProp = function (obj, prop, callback) {
+        Object.defineProperty(obj, prop, {
+            get : callback || function () {}
+        });
+    };
+
+    var _watchArray = (function () {
+        var vMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse']
+
+        var WatchArray = function () {
+            var args = [].slice.call(arguments, 0);
+            if(args.length = 1 && _.isFunction(args[0])){
+                this.callback = args[0];
+            }
+            Array.call(this, args);
+        }, _F = function () {};
+
+        _F.prototype = Array.prototype;
+        WatchArray.prototype = new _F();
+
+        vMethods.forEach(function (val) {
+            WatchArray.prototype[val] = function () {
+                var args = [].slice.call(arguments, 0),
+                    sargs = [val].concat(args);
+                if(this.callback){
+                    if(this.callback.apply(this, sargs) != false){
+                        _F.prototype[val].apply(this, args);
+                    }
+                }else{
+                    _F.prototype[val].apply(this, args);
+                }
+
+            };
+        });
+
+        return WatchArray;
+    }());
+
+    var _randomStr = function (len) {
+        var words = 'abcdefghijklmnopqrstuvwxyz1234567890',
+            str = _.pad('', len, 'X').replace(/X/g, function () {
+                return words.charAt(_.random(0, words.length ));
+            });
+
+        return str;
+    };
+
+    var physics = {
+        ptInRect : function (px, py, rx, ry, rw, rh) {
+            return px < rx ? false :
+                px > rx + rw ? false :
+                    py < ry ? false :
+                        py > ry + rh ? false : true;
+        }
+    };
+
+    var proxy = function (fun, ctx) {
+        return function () {
+            var args = [].slice.call(arguments, 0);
+            return fun.apply(ctx, args);
+        };
+    };
+
     return {
         extends : _extends,
         mixin : _mixin,
@@ -198,6 +261,11 @@ module.exports = (function () {
         timer : function (interval, callback) {
             return new _timer(interval, callback);
         },
-        value : _value
+        value : _value,
+        privateProp : _privateProp,
+        randomStr : _randomStr,
+        physics : physics,
+        WatchArray : _watchArray,
+        proxy : proxy
     };
 }());

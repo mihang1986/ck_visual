@@ -28,10 +28,19 @@ module.exports = (function () {
 
         // 事件
         var that = this,
+            deepEvent = function(amiobj, type, event){
+                amiobj.notify && amiobj.notify[type] && amiobj.notify[type].call(amiobj, event);
+                if(amiobj.subObjs){
+                    amiobj.subObjs.forEach(function (ab) {
+                        deepEvent(ab.obj, type, event);
+                    });
+                }
+            },
             attachEvent = function (type) {
                 that.surface.addEventListener(type, function (event) {
                     that.objects.forEach(function (p1, p2, p3) {
-                        p1.obj.notify && p1.obj.notify[type] && p1.obj.notify[type].call(p1.obj, event);
+                        //p1.obj.notify && p1.obj.notify[type] && p1.obj.notify[type].call(p1.obj, event);
+                        deepEvent(p1.obj, type, event);
                     });
                 });
             };

@@ -1,3 +1,6 @@
+const Utils = require("./utils"),
+    _ = require('lodash');
+
 // 动画类
 module.exports = (function () {
     var wraperUpdate = function (updateFun) {
@@ -25,13 +28,67 @@ module.exports = (function () {
         }
     };
 
+    var watchData = function (obj, path) {
+        var ret = {};
+
+        if(!_.isPlainObject(obj) && !_.isArray(obj)){
+            return obj;
+        }
+
+       Object.keys(obj).forEach(function (key) {
+           var _path = function(){
+                   var x = (path || []).slice(0);
+                   x.push(key);
+                   return x;
+               }(),
+               _value = obj[key], _path;
+
+           Object.defineProperty(ret, key, {
+               set : function (val) {
+                   //console.log(`set, path : ${_path.join('.')}, val : ${val}`);
+                   _value = watchData(val);
+               },
+               get : function () {
+                   //console.log(`get, path : ${_path.join('.')}, val : ${_value}`);
+                   return _value;
+               }
+           });
+
+           if(_.isPlainObject(obj[key])){
+               _value = watchData(_value, _path);
+           }else if(_.isArray(obj[key])){
+                _value = new Utils.WatchArray(function (type, obj) {
+                    var _p = function(){
+                        var x = (_path || []).slice(0);
+                        x.push("[]");
+                        return x;
+                    }();
+
+                    console.log(`array opt : ${type}, args : ${[].slice.call(arguments, 1)}`);
+                    if(type == "push" || type == "unshift"){
+                        Array.prototype[type].call(this, watchData(obj, _p));
+                        return false;
+                    }
+                });
+                obj[key].forEach(function (val) {
+                    _value.push(val);
+                });
+           }
+       });
+
+       return ret;
+    };
+
     var _amiObj = function (opt) {
         this.actions = [];
         this.subObjs = (opt && opt.subObjs) || [];
+
+        if(opt && opt.data)
+             this.bindData(opt.data);
     };
 
     _amiObj.prototype = {
-        _action : function (type, duration, opt, callback) {
+        _action(type, duration, opt, callback) {
             this.actions.push({
                 type : type,
                 elapsed : 0,
@@ -40,7 +97,7 @@ module.exports = (function () {
                 opt : opt
             });
         },
-        addSubObject : function (subObj, level) {
+        addSubObject(subObj, level) {
             if(!(subObj instanceof  _amiObj))
                 throw "必须添加Animation对象";
 
@@ -62,8 +119,20 @@ module.exports = (function () {
 
             return this;
         },
-        surface : function () {
+        surface() {
             return this.__surface || null;
+        },
+        bindData(data){
+            this.data = watchData(data);
+        },
+        fire(event, args){
+            var _event = this.events[event];
+            if(_event && _event instanceof Function){
+                _event.call(this, args);
+            }
+        },
+        trigger(type, event){
+            this.notify && this.notify[type] && this.notify[type].call(this, event);
         }
     };
 
@@ -78,6 +147,7 @@ module.exports = (function () {
             _clazz.prototype = new _amiObj(opt);  // 为了让该类有父类的方法,其子属性会被构造函数所覆盖
             _clazz.prototype.update = wraperUpdate(opt.update);
             _clazz.prototype.action = opt.action || null;
+            _clazz.prototype.events = opt.events || null;
             _clazz.prototype.render = opt.render || null;
             _clazz.prototype.notify = opt.notify || null;
 

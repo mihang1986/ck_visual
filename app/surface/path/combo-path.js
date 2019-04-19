@@ -26,7 +26,6 @@ module.exports = (function () {
             var s = 1 / this.paths.length,
                 i = Math.min(Math.max(Math.ceil(percent / s) - 1, 0), this.paths.length - 1),
                 p = (percent % s) * this.paths.length;
-
             return this.paths[i].resolve(p);
         }
     });
