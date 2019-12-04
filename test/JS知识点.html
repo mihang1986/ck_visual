@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+
+    // 属性用中括号括起来,就可以取值作为属性
+    let a = 'aaa',
+        b = {
+            [a] : 123
+        };
+    console.log(b);
+
+    // Symbol
+    let obj = {
+        0: 'a',
+        1: 'b',
+        2: 'c',
+        length: 3,
+        [Symbol.iterator]: function () {
+            // index用来记遍历圈数
+            let index = 0;
+            let next = () => {
+                return {
+                    value: this[index],
+                    done: this.length == index++
+                }
+            }
+            return {
+                next
+            }
+        }
+    }
+    console.log([...obj]);//(2) ["a", "b"]
+    for(let p of obj){
+        console.log(p) //"a"  "b"
+    }
+</script>
+</body>
+</html>

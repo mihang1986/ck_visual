@@ -3,9 +3,27 @@ const FramePerSecond = require("./component/frame-per-second"),
 
 // 画板
 module.exports = (function () {
+    // const
+    //     loopFn = requestAnimationFrame;
+
+    const
+        loopFn = function (callback) {
+            return setTimeout(callback, 1);
+        };
+
+    const
+        deepEvent = function(amiobj, type, event){
+            amiobj.notify && amiobj.notify[type] && amiobj.notify[type].call(amiobj, event);
+            if(amiobj.subObjs){
+                amiobj.subObjs.forEach(function (ab) {
+                    deepEvent(ab.obj, type, event);
+                });
+            }
+        };
+
     var adjustCanvas = function (surface) {
         return function () {
-            var parent = surface.surface.parentNode;
+            var parent = surface.surface.parentNode ||  document.body;
             surface.surface.width = parent.offsetWidth;
             surface.surface.height = parent.offsetHeight;
             surface.width = surface.surface.width;
@@ -28,14 +46,6 @@ module.exports = (function () {
 
         // 事件
         var that = this,
-            deepEvent = function(amiobj, type, event){
-                amiobj.notify && amiobj.notify[type] && amiobj.notify[type].call(amiobj, event);
-                if(amiobj.subObjs){
-                    amiobj.subObjs.forEach(function (ab) {
-                        deepEvent(ab.obj, type, event);
-                    });
-                }
-            },
             attachEvent = function (type) {
                 that.surface.addEventListener(type, function (event) {
                     that.objects.forEach(function (p1, p2, p3) {
@@ -55,15 +65,20 @@ module.exports = (function () {
         });
 
 
-
         // 初始化
         if(opts.fps) this.pushObject(new FramePerSecond({showFrame : true, showElapsed : true}), _surface.LEVEL.TOP);
         if(opts.bgColor) this.pushObject(new BackGround({color : opts.bgColor}), _surface.LEVEL.BACK);
-        if(opts.bgImg) this.pushObject(new BackGround({image : opts.bgImg, scale : opts.scale}),  _surface.LEVEL.BACK);
+        if(opts.bgImg || opts.bg) this.pushObject(new BackGround({image : opts.bgImg, scale : opts.scale, bg : opts.bg}),  _surface.LEVEL.BACK);
         if(opts.full){
             var resizeFun = adjustCanvas(this);
-            window.addEventListener("load", function () {resizeFun()});
-            window.addEventListener("resize", function () {resizeFun()});
+            var notifyFun = function(){
+                that.objects.forEach(function (p1) {
+                    deepEvent(p1.obj, "parentresize", {surface : that});
+                });
+            };
+            window.addEventListener("load", function () {resizeFun(); notifyFun();});
+            window.addEventListener("resize", function () {resizeFun(); notifyFun();});
+            resizeFun();
         };
     };
 
@@ -101,7 +116,27 @@ module.exports = (function () {
 
             this.objects.splice(idx == -1 ? this.objects.length : idx, 0, o);
 
+
+            deepEvent(amiObj, 'resource', {surface : this, canvas : this.surface, context : this.context});
+
+            // 20190423新增
+            // if(amiObj.notify && amiObj.notify["resource"])
+            //     amiObj.notify["resource"].call(amiObj, {surface : this, canvas : this.surface, context : this.context});
+
+            // 20191024
+            // if(amiObj.attach)
+            //     amiObj.attach.call(amiObj, {surface : this, canvas : this.surface, context : this.context});
+
+
             return this;
+        },
+        removeObject : function(amiObj){
+            for(let i=0; i<this.objects.length; i++){
+                if(this.objects[i].obj == amiObj){
+                    this.objects.splice(i, 1);
+                    break;
+                }
+            }
         },
         run : function () {
             var last, frameLast, that = this,
@@ -133,7 +168,8 @@ module.exports = (function () {
 
                         if(!drawMaster){
                             that.context.save();
-                            amiobj.obj.render ? amiobj.obj.render(elapsed, amiobj.elapsed, that.context, that.surface, ret, pret, parent && parent.obj) : null;
+                            amiobj.obj.render ?
+                                amiobj.obj.render(elapsed, amiobj.elapsed, that.context, that.surface, ret, pret, parent && parent.obj) : null;
                             that.context.restore();
                             drawMaster = true;
                         }
@@ -151,7 +187,7 @@ module.exports = (function () {
                         // 如果小于,则跳过本次绘制,继续执行下次绘制,否则重置帧计时执行绘制
                         // 这里要注意,因为系统时间并不是精确的,所以帧计时一定要保留余数后在参与下次计算
                         if(that.limitInterval <= (1000 / that.limit)){
-                            requestAnimationFrame(_draw);
+                            loopFn(_draw);
                             return;
                         }else{
                             that.limitInterval %= (1000 / that.limit);
@@ -170,7 +206,7 @@ module.exports = (function () {
                         _drawObj(obj, elapsed);
                     });
 
-                    requestAnimationFrame(_draw);
+                    loopFn(_draw);
                 }
 
             _draw();

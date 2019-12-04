@@ -21,7 +21,9 @@ module.exports = (function () {
             return [this.x + Math.cos(c * p + s) * this.r,
                 this.y + Math.sin(c * p + s) * this.r,
                 this.inversion ? sk - Math.PI: sk];
-
+        },
+        length : function () {
+            return Math.abs(this.sAngle - this.eAngle) * this.r;
         }
     });
 }());

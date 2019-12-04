@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <script>
+            window.navigator.geolocation.getCurrentPosition((coords, timestamp) => {
+                console.log(coords);
+            }, (response) => {
+                console.log(response);
+            });
+
+            // Promise.resolve
+
+        </script>
+    </body>
+</html>

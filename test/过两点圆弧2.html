@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <canvas id="cvs" width="501" height="501"></canvas>
+        <script>
+            const
+                toRadian = function(degree){
+                    return Math.PI / 180 * degree;
+                },
+                toDegree = function(radian){
+                    return 180 / Math.PI * radian;
+                },
+                length = function(vec){
+                    return Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2));
+                },
+                distance = function(point1, point2){
+                    const
+                        x = point2[0] - point1[0],
+                        y = point2[1] - point1[1];
+                    return length([x, y]);
+                },
+                middle = function(point1, point2){
+                    return [
+                        (point1[0] + point2[0]) / 2.0,
+                        (point1[1] + point2[1]) / 2.0
+                    ];
+                },
+                normalize = function (vec) {
+                    const l = length(vec);
+                    return [vec[0] / l, vec[1] / l];
+                },
+                multiply = function (vec, real) {
+                    return [vec[0] * real, vec[1] * real];
+                },
+                dot = function (vec1, vec2) {
+                    return vec1[0] * vec2[0] + vec1[1] * vec2[1];
+                },
+                roate = function (vec, degree) {
+                    const
+                        x = vec[0],
+                        y = vec[1],
+                        a = toRadian(degree),
+                        sinA = Math.sin(a),
+                        cosA = Math.cos(a);
+                    return [x * cosA - y * sinA, x * sinA + y * cosA];
+                },
+                vector = function (point1, point2) {
+                    return [point2[0] - point1[0], point2[1] - point1[1]];
+                },
+                reverse = function (vec) {
+                    return [-vec[0], -vec[1]];
+                },
+                add = function (point, vec) {
+                    return [point[0] + vec[0], point[1] + vec[1]];
+                },
+                atan2 = function (vec) {
+                    return Math.atan2(vec[1], vec[0]);
+                };
+
+            const
+                drawPoint = function(point, color){
+                    ctx.fillStyle = color || '#675aff'
+                    ctx.beginPath();
+                    ctx.arc(point[0], point[1], 5, 0, Math.PI * 2);
+                    ctx.fill();
+                },
+                drawArc = function (o, r, start = 0, end = Math.PI * 2, color = '#000') {
+                    ctx.strokeStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(o[0], o[1], r, start, end);
+                    ctx.stroke();
+                },
+                lowestRadius = function (point1, point2) {
+                    return distance(point1, point2) / 2;
+                },
+                twoPointArc = function (point1, point2, radius, ccw = false) {
+                    if(radius < lowestRadius(point1, point2))
+                        throw '不合法的半径';
+
+                    const
+                        tpVector = vector(point1, point2),
+                        norVector = normalize(roate(tpVector, ccw ? -90 : 90)),
+                        movVector = multiply(norVector, Math.sqrt(Math.pow(radius, 2) - Math.pow(length(tpVector) / 2, 2))),
+                        cirCenter = add(middle(point1, point2), movVector),
+                        startArc = atan2(vector(point1, cirCenter)) + Math.PI,
+                        endArc = atan2(vector(point2, cirCenter))+ Math.PI;
+
+                    return {
+                        origin : cirCenter,
+                        start : ccw ? endArc : startArc,
+                        end : ccw ? startArc : endArc
+                    };
+                };
+
+
+
+
+            const
+                cvs = document.querySelector('#cvs'),
+                ctx = cvs.getContext('2d'),
+                clear = function () {
+                    ctx.strokeStyle = '#c6c6c6';
+                    ctx.clearRect(0, 0, cvs.width, cvs.height);
+                    ctx.strokeRect(0, 0, cvs.width, cvs.height);
+                },
+                draw = function (point1, point2, radius) {
+                    const {origin : oPt, start : sArc, end : eArc} = twoPointArc(point1, point2, radius, false);
+
+                    drawPoint(point1, '#0017ff');
+                    drawPoint(point2, '#ff00f6');
+                    drawPoint(oPt, '#00ff12');
+                    drawArc(oPt, radius, sArc, eArc, '#ff5c4b');
+                };
+
+
+            const
+                point1 = [200, 50],
+                point2 = [50, 200];
+            clear();
+            draw(point1, point2, lowestRadius(point1, point2) + 50);
+
+            let
+                current = 0;
+            cvs.addEventListener('click', function (event) {
+                if(current % 2){
+                    point2[0] = event.offsetX;
+                    point2[1] = event.offsetY;
+                    clear();
+                    draw(point1, point2, lowestRadius(point1, point2) + 50);
+                }else{
+                    point1[0] = event.offsetX;
+                    point1[1] = event.offsetY;
+                    drawPoint(point1, '#fff000');
+                }
+                current ++;
+            });
+
+        </script>
+    </body>
+</html>

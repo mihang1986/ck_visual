@@ -1,0 +1,42 @@
+var path = require("path");
+
+module.exports = {
+    entry: ['./app/surface/animation.js',
+        './app/surface/surface.js',
+        './app/surface/utils.js',
+        './app/surface/component/back-ground.js',
+        './app/surface/component/frame-per-second.js',
+        './app/surface/component/line.js',
+        './app/surface/component/point.js',
+        './app/surface/component/rect.js',
+        './app/surface/component/scroll-bar.js',
+        './app/surface/component/text-area.js',
+        './app/surface/component/text-input.js',
+        './app/surface/interpolator/back-interpolator.js',
+        './app/surface/interpolator/bounce-interpolator.js',
+        './app/surface/interpolator/circ-interpolator.js',
+        './app/surface/interpolator/cubic-interpolator.js',
+        './app/surface/interpolator/ease-cubic-interpolator.js',
+        './app/surface/interpolator/elastic-interpolator.js',
+        './app/surface/interpolator/expo-interpolator.js',
+        './app/surface/interpolator/interpolator.js',
+        './app/surface/interpolator/linear-interpolator.js',
+        './app/surface/interpolator/quad-interpolator.js',
+        './app/surface/interpolator/quart-interpolator.js',
+        './app/surface/interpolator/quint-interpolator.js',
+        './app/surface/interpolator/sine-interpolator.js',
+        './app/surface/path/arc-path.js',
+        './app/surface/path/arcto-path.js',
+        './app/surface/path/bezier-path.js',
+        './app/surface/path/combo-path.js',
+        './app/surface/path/line-path.js',
+        './app/surface/path/path.js',
+        './app/surface/path/quadratic-path.js',
+        './app/surface/path/rect-path.js',
+        './app/surface/shape/point.js',
+        './app/surface/shape/shape.js'],
+    output: {
+        path: path.join(__dirname, './out'),
+        filename: 'single.js'
+    }
+};

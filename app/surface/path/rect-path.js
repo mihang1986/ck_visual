@@ -38,6 +38,9 @@ module.exports = (function () {
         },
         resolve : function (percent) {
             return this._paths.resolve(percent);
+        },
+        length : function () {
+            return this._paths.length();
         }
     });
 }());

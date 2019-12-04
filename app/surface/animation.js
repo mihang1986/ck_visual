@@ -133,23 +133,51 @@ module.exports = (function () {
         },
         trigger(type, event){
             this.notify && this.notify[type] && this.notify[type].call(this, event);
+        },
+        appendTo(surface, level){
+            surface.pushObject(this, level);
+            return this;
         }
     };
 
-    return {
-        create : function (opt) {
+    const
+        comboRenderFn = function (fun1, fun2) {
+            return function(){
+                let args = [].slice.call(arguments, 0);
+                fun1.apply(this, args);
+                fun2.apply(this, args);
+            };
+        },
+        comboUpdateFn = function (fun1, fun2) {
+            return function(){
+                let
+                    args = [].slice.call(arguments, 0),
+                    resutl = fun1.apply(this, args);
+                args.push(resutl);
+                fun2.apply(this, args);
+            };
+        };
+
+    const
+        create = function (opt) {
 
             var _clazz =  function (ops) {
                 _amiObj.call(this, ops);
                 opt.constructor ? opt.constructor.call(this, ops) : null;
             };
 
+            _clazz.constr = opt.constructor;
             _clazz.prototype = new _amiObj(opt);  // 为了让该类有父类的方法,其子属性会被构造函数所覆盖
             _clazz.prototype.update = wraperUpdate(opt.update);
             _clazz.prototype.action = opt.action || null;
             _clazz.prototype.events = opt.events || null;
             _clazz.prototype.render = opt.render || null;
-            _clazz.prototype.notify = opt.notify || null;
+            _clazz.prototype.notify = opt.notify || {};
+            _clazz.prototype.attach = opt.attach || null;
+
+            // attach 为 notify.resource的简写
+            if(opt.attach)
+                _clazz.prototype.notify['resource'] = _clazz.prototype.attach;
 
             if(opt.methods){
                 for(var method in opt.methods){
@@ -158,6 +186,40 @@ module.exports = (function () {
             }
 
             return _clazz;
-        }
+        },
+        extend = function (clazz, opt) {
+            const
+                _cls = new clazz(opt),
+                _clazz =  function (ops) {
+                    _amiObj.call(this, ops);
+                    clazz.constr ? clazz.constr.call(this, ops) : null;
+                    opt.constructor ? opt.constructor.call(this, ops) : null;
+                };
+
+            _clazz.prototype = _cls;
+            if(opt.update) _clazz.prototype.update = comboUpdateFn(_clazz.prototype.update, opt.update);
+            if(opt.render) _clazz.prototype.render = comboRenderFn(_clazz.prototype.render, opt.render);
+
+            if(opt.action) Object.assign(_clazz.prototype.action, opt.action);
+            if(opt.events) Object.assign(_clazz.prototype.events, opt.events);
+            if(opt.notify) Object.assign(_clazz.prototype.notify, opt.notify);
+            _clazz.prototype.attach = opt.attach || null;
+
+            // attach 为 notify.resource的简写
+            if(opt.attach)
+                _clazz.prototype.notify['resource'] = _clazz.prototype.attach;
+
+            if(opt.methods){
+                for(var method in opt.methods){
+                    _clazz.prototype[method] = opt.methods[method];
+                }
+            }
+
+            return _clazz;
+        };
+
+    return {
+        create,
+        extend
     };
 }());

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <canvas id="cvs" width="801" height="801"></canvas>
+        <script>
+            const
+                cvs = document.querySelector('#cvs'),
+                ctx = cvs.getContext('2d'),
+                halfWidth = cvs.width / 2,
+                halfHeight = cvs.height / 2;
+
+            ctx.strokeStyle = '#c6c6c6';
+            ctx.strokeRect(0, 0, cvs.width, cvs.height);
+
+            ctx.translate(halfWidth, halfHeight);
+
+            ctx.beginPath();
+            ctx.moveTo(-halfWidth, 0);
+            ctx.lineTo(halfWidth, 0);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, -halfHeight);
+            ctx.lineTo(0, halfHeight);
+            ctx.stroke();
+
+
+            // ctx.fillRect(0, 0, 10, 10);
+            //
+            // ctx.strokeStyle = '#000';
+            // ctx.beginPath();
+            // ctx.arc(0, 0, 50, 0, Math.PI / 2);
+            // ctx.stroke();
+
+            // =======================================================
+            const
+                toRadian = function(degree){
+                    return Math.PI / 180 * degree;
+                },
+                toDegree = function(radian){
+                    return 180 / Math.PI * radian;
+                },
+                length = function(vec){
+                    return Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2));
+                },
+                distance = function(point1, point2){
+                    const
+                        x = point2[0] - point1[0],
+                        y = point2[1] - point1[1];
+                    return length([x, y]);
+                },
+                middle = function(point1, point2){
+                    return [
+                        (point1[0] + point2[0]) / 2.0,
+                        (point1[1] + point2[1]) / 2.0
+                    ];
+                },
+                normalize = function (vec) {
+                    const l = length(vec);
+                    return [vec[0] / l, vec[1] / l];
+                },
+                multiply = function (vec, real) {
+                    return [vec[0] * real, vec[1] * real];
+                },
+                dot = function (vec1, vec2) {
+                    return vec1[0] * vec2[0] + vec1[1] * vec2[1];
+                },
+                roate = function (vec, degree) {
+                    const
+                        x = vec[0],
+                        y = vec[1],
+                        a = toRadian(degree),
+                        sinA = Math.sin(a),
+                        cosA = Math.cos(a);
+                    return [x * cosA - y * sinA, x * sinA + y * cosA];
+                },
+                vector = function (point1, point2) {
+                    return [point2[0] - point1[0], point2[1] - point1[1]];
+                },
+                reverse = function (vec) {
+                    return [-vec[0], -vec[1]];
+                };
+
+            const
+                drawPoint = function(point, color){
+                    ctx.fillStyle = color || '#675aff'
+                    ctx.beginPath();
+                    ctx.arc(point[0], point[1], 5, 0, Math.PI * 2);
+                    ctx.fill();
+                },
+                drawArc = function (o, r, start = 0, end = Math.PI * 2, color = '#000') {
+                    ctx.strokeStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(o[0], o[1], r, start, end);
+                    ctx.stroke();
+                };
+
+
+            // const
+            //     point1 = [-100, -100],
+            //     point2 = [100, 100],
+            //     r = 200,
+            //     halfDis = distance(point1, point2) / 2,
+            //     vec = roate([point2[0] - point1[0], point2[1] - point1[1]], 90);
+            //
+            // drawPoint(point1, '#ff000c');
+            // drawPoint(point2, '#0017ff');
+            //
+            // drawPoint(vec, '#ff00f6')
+            //
+            // const
+            //     moveLength = Math.sqrt(r * r - halfDis * halfDis),
+            //     norVec = normalize(vec),
+            //     o = multiply(norVec, moveLength);
+            //
+            // drawPoint(o, '#00ff04')
+            //
+            //
+            //
+            // ctx.beginPath();
+            // ctx.arc(o[0], o[1], r, 0, Math.PI * 2);
+            // ctx.stroke();
+
+
+            // https://blog.csdn.net/cocoonyang/article/details/52787288
+            const
+                point1 = [30, -150],
+                point2 = [150, 150],
+                // r = distance(point1, point2) / 2,    // 最小弧度, 最小弧度不可能低于两点距离的一半,当半径等于两点距离的一半的时候,则就是个半圆
+                r = 250,
+                vec = vector(point1, point2),                       // 计算point1到point2的向量
+                rotVec = roate(vec, 90),                            //  旋转向量,得到垂直于两点连线的垂线,如果这里是-90则是反弧
+                halfDis = distance(point1, point2) / 2,             // 取得两点连线的一半距离
+                midPoint = middle(point1, point2),                  // 取得两点的中间点
+                movLength = Math.sqrt(r * r - halfDis * halfDis),   // 根据勾股定理取得半径从中间点沿rotVec向量所需的移动距离
+                unitVec = normalize(rotVec),                           // 归一化rotVec向量
+                to = multiply(unitVec, movLength),                      // 用归一化的向量乘以所需的移动距离,得到移动后的向量
+                o = [to[0] + midPoint[0], to[1] + midPoint[1]];         // 将向量与中心点相加,得到圆心
+
+            //
+            // console.log(distance(point1, point2));
+            // console.log(halfDis);
+
+            // console.log(lDis);
+            // console.log(movLength);
+            drawPoint(point1, '#ff000c');
+            drawPoint(point2, '#0017ff');
+            drawPoint(o, '#02fdff');
+            // drawPoint(vec, '#00ff17');
+            // drawPoint(rotVec, '#ffee00');
+            // drawPoint(midPoint, '#ff00e1');
+            // drawPoint(o, '#02fdff');
+            // drawArc(o, r);
+            //
+            // drawPoint(norRotVec, '#000');
+            // console.log(movLength);
+
+
+
+
+
+
+
+
+            //===============计算方式1=======================
+            // const
+            //     sinA = halfDis / r,
+            //     asinA = Math.asin(sinA),
+            //     norVec1 = normalize(rotVec),
+            //     norH = normalize([1, 0]),
+            //     nDot = dot(reverse(norVec1), norH),
+            //     rRot = Math.acos(nDot);
+            //
+            //
+            // console.log(toDegree(rRot));
+            //
+            // const
+            //     start = Math.PI * 2 - rRot - asinA,
+            //     end = start + asinA * 2;
+            // drawArc(o, r, Math.PI * 2 - rRot - asinA, end,  '#ffe52c');
+            //===============================================
+
+
+            //===============计算方式2=======================
+            // const
+            //     sinA = halfDis / r,
+            //     asinA = Math.asin(sinA),
+            //     vec1 = [o[0] - point1[0], o[1] - point1[1]],
+            //     vecH = [1, 0];
+            //
+            // // drawPoint(vec1, '#fff300');
+            //
+            // let a = Math.acos(dot(normalize(vec1), normalize(vecH)));
+            // drawArc(o, r, Math.PI - a, Math.PI - a +  asinA * 2, '#ffe52c');
+            //===============================================
+
+            // 计算开始弧和结束弧
+            // ===============计算方式3(最稳定,最科学)=======================
+            // https://www.cnblogs.com/lyggqm/p/5497988.html
+            // C 语言里 double atan2(double y,double x) 返回的是原点至点(x,y)的方位角，即与 x 轴的夹角。也可以理解为复数 x+yi 的辐角。返回值的单位为弧度
+            const
+                vec1 = vector(o, point1),
+                vec2 = vector(o, point2),
+                rot1 = Math.atan2(vec1[1], vec1[0]),
+                rot2 = Math.atan2(vec2[1], vec2[0]);
+
+            // drawPoint(vec1, '#ff0026');
+           // drawPoint(vec2, '#ff00d1');
+
+            drawArc(o, r, rot1, rot2,  '#ffe52c');
+            //===============================================
+
+
+            // console.log(Math.atan2());
+
+
+            //console.log(toDegree(rot2));
+        </script>
+    </body>
+</html>

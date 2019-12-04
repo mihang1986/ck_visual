@@ -17,6 +17,21 @@ module.exports = (function () {
                     this.x0 * 2 * (1 - percent) * -1 + 2 * this.x1 * ((1 - percent) + (-1) * percent) + this.x2 * 2 * percent);
 
             return [x, y, r];
+        },
+        length : function (point = 30) {
+            let result = 0;
+            if(point < 2) return 0;
+
+            let cp = this.resolve(0);
+            for(let i=1; i<=point; i++){
+                let p = 1 / point * i,
+                    np = this.resolve(p),
+                    d = Math.sqrt(Math.pow(cp[0] - np[0],2) + Math.pow(cp[1] - np[1], 2));
+
+                cp = np;
+                result += d;
+            }
+            return result;
         }
     });
 }());

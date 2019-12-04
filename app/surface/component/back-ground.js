@@ -24,6 +24,20 @@ var defOpt = {
                 ctx.drawImage(image,
                     srcW > cW ? -((srcW - cW )/ 2) : (cW - srcW) / 2,
                     srcH > cH ? -((srcH - cH )/ 2) : (cH - srcH) / 2);
+        },
+        bg : function (passed, elapsed, ctx, cvs) {
+            var image = this.image.canvas,
+                srcW = this.image.width,
+                srcH = this.image.height,
+                cW = cvs.width,
+                cH = cvs.height;
+
+            if(this.options.scale)
+                ctx.drawImage(image, 0, 0, srcW, srcH, 0, 0, cW, cH);
+            else
+                ctx.drawImage(image,
+                    srcW > cW ? -((srcW - cW )/ 2) : (cW - srcW) / 2,
+                    srcH > cH ? -((srcH - cH )/ 2) : (cH - srcH) / 2);
         }
     };
 
@@ -34,12 +48,16 @@ module.exports = Animation.create({
 
         if(this.options.image){
             Utils.loadImage(this.options.image, function () {
-                that.image = Utils.tranImage(this, "gauss", {sigma : 20});
+                // that.image = Utils.tranImage(this, "gauss", {sigma : 20});
+                that.image = this;
                 that.renderFn = renderFn.image;
             });
+        }else if(this.options.bg){
+            this.image = opt.bg;
+            that.renderFn = renderFn.bg;
+        }else{
+            this.renderFn = renderFn.color;
         }
-
-        this.renderFn = renderFn.color;
     },
     render : function (passed, elapsed, ctx, cvs) {
         this.renderFn ? this.renderFn.call(this, passed, elapsed, ctx, cvs) : null;

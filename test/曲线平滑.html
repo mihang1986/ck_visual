@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <canvas id="cvs" width="500" height="500"></canvas>
+        <script>
+            const
+                toRadian = function(degree){
+                    return Math.PI / 180 * degree;
+                },
+                toDegree = function(radian){
+                    return 180 / Math.PI * radian;
+                },
+                length = function(vec){
+                    return Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2));
+                },
+                distance = function(point1, point2){
+                    const
+                        x = point2[0] - point1[0],
+                        y = point2[1] - point1[1];
+                    return length([x, y]);
+                },
+                middle = function(point1, point2){
+                    return [
+                        (point1[0] + point2[0]) / 2.0,
+                        (point1[1] + point2[1]) / 2.0
+                    ];
+                },
+                normalize = function (vec) {
+                    const l = length(vec);
+                    return [vec[0] / l, vec[1] / l];
+                },
+                multiply = function (vec, real) {
+                    return [vec[0] * real, vec[1] * real];
+                },
+                dot = function (vec1, vec2) {
+                    return vec1[0] * vec2[0] + vec1[1] * vec2[1];
+                },
+                roate = function (vec, degree) {
+                    const
+                        x = vec[0],
+                        y = vec[1],
+                        a = toRadian(degree),
+                        sinA = Math.sin(a),
+                        cosA = Math.cos(a);
+                    return [x * cosA - y * sinA, x * sinA + y * cosA];
+                },
+                vector = function (point1, point2) {
+                    return [point2[0] - point1[0], point2[1] - point1[1]];
+                },
+                reverse = function (vec) {
+                    return [-vec[0], -vec[1]];
+                },
+                add = function (point, vec) {
+                    return [point[0] + vec[0], point[1] + vec[1]];
+                },
+                atan2 = function (vec) {
+                    return Math.atan2(vec[1], vec[0]);
+                };
+
+
+            const
+                cvs = document.querySelector('#cvs'),
+                ctx = cvs.getContext('2d');
+
+            ctx.translate(cvs.width / 2, cvs.height / 2);
+
+            const
+                drawPoint = (ctx, p, color = '#000') => {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(p[0], p[1], 3, 0, Math.PI * 2);
+                    ctx.fill();
+                },
+                drawLine = (ctx, sp, tp, color = '#000') => {
+                    ctx.strokeStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(sp[0], sp[1]);
+                    ctx.lineTo(tp[0], tp[1]);
+                    ctx.stroke();
+                },
+                drawText = (ctx, text, pt, color = '#000', offX = 0, offY = 10) =>{
+                    ctx.strokeStyle = color;
+                    ctx.textBaseline = 'middle';
+                    ctx.textAlign = 'center';
+                    ctx.strokeText(text, pt[0] + offX, pt[1] + offY);
+                },
+                getPoint = (pts, idx) => {
+                    const
+                        aidx = idx % pts.length;
+                    return aidx >= 0 ? pts[aidx] : pts[pts.length + aidx]
+                },
+                calcAssistPoint = (pts, idx) => {
+                    const
+                        prevPt = getPoint(pts, idx - 1),
+                        nextPt = getPoint(pts, idx + 1),
+                        currPt = getPoint(pts, idx),
+                        vecP2C = vector(prevPt, currPt),
+                        vecP2N = vector(prevPt, nextPt),
+                        vecNew = roate(vecP2N, vecP2C[1] >= 0 ? 90 : -90),
+                        norNew = normalize(vecNew),
+                        disP2C = distance(prevPt, currPt),
+                        disC2N = distance(currPt, nextPt),
+                        disP2N = distance(prevPt, nextPt),
+                        p = (disP2C + disC2N + disP2N) / 2, // 海伦公式, https://zhidao.baidu.com/question/2079927446789910268.html?fr=iks&word=%C8%FD%BD%C7%D0%CE%D2%D1%D6%AA%C8%FD%B1%DF+%C7%F3%B8%DF&ie=gbk
+                        s = Math.sqrt(p * (p - disP2C) * (p - disC2N) * (p - disP2N)),  // 三角形三边已知,通过海伦公式获得面积,又因为三角形面积=底x高/2,因为面积知道,底知道,那么 h = 2s / 底
+                        h = s * 2 / disP2N, // s = 1/2ah -> 2s = ah -> h = 2s / a;
+                        np1 = add(prevPt, multiply(norNew, h)),
+                        np2 = add(nextPt, multiply(norNew, h));
+
+                    // console.log(disP2C, disC2N, disP2N, aLength);
+
+
+                    [prevPt, currPt, nextPt].forEach((p, i) => {
+                        drawText(ctx, ['P', 'C', 'N'][i], p, '#f0f', 0, -10);
+                    });
+
+                    [np1, np2].forEach((p, i) => {
+                        drawPoint(ctx, p, '#3a9b1c');
+                        drawText(ctx, ['NP1', 'NP2'][i], p, '#3a9b1c', 0, -10);
+                    });
+
+                    // console.log(vecP2C);
+                    // drawLine(ctx, [0, 0], norNew);
+                };
+
+
+            const
+                points = [[0, -100], [100, 0], [-100, 0]];
+
+            points.forEach((p, i) => {
+                drawPoint(ctx, p);
+                drawText(ctx, i, p);
+            });
+
+            calcAssistPoint(points, 1);
+
+        </script>
+    </body>
+</html>

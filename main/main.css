@@ -1,0 +1,40 @@
+@charset "UTF-8";
+
+@font-face {
+    font-family: DGF;
+    src: url('./res/font/DS-DIGI.TTF');
+}
+
+@font-face {
+    font-family: DFF;
+    src: url('./res/font/汉仪旗黑-50S.otf');
+}
+
+/* main.css */
+html, body{
+    width: 100%;
+    height:100%;
+    margin: 0;
+    padding: 0;
+}
+canvas{
+    margin: 0;
+    padding: 0;
+    left: 0;
+    top: 0;
+    position: absolute;
+}
+
+.loadfont{
+    position: absolute;
+    left: -999px;
+    top: -999px;
+}
+
+.loadfont.dfg{
+    font: 12px DGF;
+}
+
+.loadfont.dff{
+    font: 12px DFF;
+}

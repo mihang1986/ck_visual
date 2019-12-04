@@ -12,10 +12,11 @@ module.exports = (function () {
                 y : 0,      // y 坐标
                 r : 30,     // 半径
                 speed : 5,
+                inner : 0.01,
                 color : "#f0f"
             },  opt);
 
-            var pr = this.opt.r * .25,
+            var pr = this.opt.r * this.opt.inner,
                 wsr = Array(8).fill(0).map(function (p1, p2, p3) {
                     return (that.opt.r  / 8 * p2) + (that.opt.r * .3);
                 });
